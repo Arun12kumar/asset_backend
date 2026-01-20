@@ -46,8 +46,8 @@ export const createSessionAndSetCookies = async (
 
   const cookieBase = {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+    secure: true,
+    sameSite:"none",
   };
 
   res.cookie("accessToken", accessToken, {
