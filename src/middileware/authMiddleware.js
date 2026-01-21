@@ -1,16 +1,18 @@
 import jwt from "jsonwebtoken";
 import { promisify } from "util";
 import sessionModel from "../models/sessionModel.js";
-import redisClient from "../config/redisClient.js"; // ✅ Ensure Redis client is initialized once
 
 const verifyToken = promisify(jwt.verify);
 
-// const cookieOptions = () => ({
-//   httpOnly: true,
-//   secure:true,
-//   sameSite: 'lax',
-//   path: "/", // ensures cookies clear across all routes
-// });
+const getCookieOptions = () => {
+  const isProduction = process.env.NODE_ENV === "production";
+  return {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: isProduction ? "none" : "strict",
+    path: "/",
+  };
+};
 
 export const authMiddleware = async (req, res, next) => {
   try {
@@ -27,47 +29,19 @@ export const authMiddleware = async (req, res, next) => {
       return res.status(403).json({ success: false, message: "Invalid or expired token" });
     }
 
-    const sessionKey = `session:${decoded.jti}`;
-    let session;
+    // ✅ Step 2: Fetch session from DB directly (Redis removed)
+    const session = await sessionModel
+      .findOne({ tokenId: decoded.jti, valid: true })
+      .select("_id userId valid createdAt updatedAt");
 
-    // ✅ Step 2: Try Redis cache first
-    if (redisClient?.isOpen) {
-
-      try {
-        const cachedSession = await redisClient.get(sessionKey);
-        if (cachedSession) {
-          session = JSON.parse(cachedSession);
-        }
-      } catch (error) {
-        console.warn("⚠️ Redis get failed:", err.message);
-      }
-    }
-
-    // ✅ Step 3: If not in cache, fetch from DB
     if (!session) {
-      session = await sessionModel
-        .findOne({ tokenId: decoded.jti, valid: true })
-        .select("_id userId valid createdAt updatedAt");
-
-      // if (!session) {
-      //   // Clear cookies on invalid session
-      //   res.clearCookie("accessToken", cookieOptions());
-      //   res.clearCookie("refreshToken", cookieOptions());
-      //   return res.status(403).json({ success: false, message: "Session is invalid or logged out" });
-      // }
-
-      // ✅ Step 4: Cache valid session for 5 minutes (TTL = 300 seconds)
-      if (redisClient?.isOpen) {
-
-        try {
-          await redisClient.set(sessionKey, JSON.stringify(session), { EX: 300 });
-        } catch (error) {
-          console.warn("⚠️ Redis set failed:", err.message);
-        }
-      }
+      // Clear cookies on invalid session
+      res.clearCookie("accessToken", getCookieOptions());
+      res.clearCookie("refreshToken", getCookieOptions());
+      return res.status(403).json({ success: false, message: "Session is invalid or logged out" });
     }
 
-    // ✅ Step 5: Attach user and session to request
+    // ✅ Step 3: Attach user and session to request
     req.user = decoded;
     req.session = session;
 
