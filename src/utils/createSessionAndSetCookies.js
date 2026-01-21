@@ -47,7 +47,7 @@ export const createSessionAndSetCookies = async (
   const cookieBase = {
     httpOnly: true,
     secure: true,
-    sameSite:"none",
+    sameSite:"lax",
   };
 
   res.cookie("accessToken", accessToken, {
