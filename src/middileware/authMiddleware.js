@@ -5,12 +5,12 @@ import redisClient from "../config/redisClient.js"; // ✅ Ensure Redis client i
 
 const verifyToken = promisify(jwt.verify);
 
-const cookieOptions = () => ({
-  httpOnly: true,
-  secure:true,
-  sameSite: 'lax',
-  path: "/", // ensures cookies clear across all routes
-});
+// const cookieOptions = () => ({
+//   httpOnly: true,
+//   secure:true,
+//   sameSite: 'lax',
+//   path: "/", // ensures cookies clear across all routes
+// });
 
 export const authMiddleware = async (req, res, next) => {
   try {
@@ -49,12 +49,12 @@ export const authMiddleware = async (req, res, next) => {
         .findOne({ tokenId: decoded.jti, valid: true })
         .select("_id userId valid createdAt updatedAt");
 
-      if (!session) {
-        // Clear cookies on invalid session
-        res.clearCookie("accessToken", cookieOptions());
-        res.clearCookie("refreshToken", cookieOptions());
-        return res.status(403).json({ success: false, message: "Session is invalid or logged out" });
-      }
+      // if (!session) {
+      //   // Clear cookies on invalid session
+      //   res.clearCookie("accessToken", cookieOptions());
+      //   res.clearCookie("refreshToken", cookieOptions());
+      //   return res.status(403).json({ success: false, message: "Session is invalid or logged out" });
+      // }
 
       // ✅ Step 4: Cache valid session for 5 minutes (TTL = 300 seconds)
       if (redisClient?.isOpen) {
