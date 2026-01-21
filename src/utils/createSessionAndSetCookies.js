@@ -44,10 +44,12 @@ export const createSessionAndSetCookies = async (
     refreshTokenexpiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7 days,
   });
 
+  const isProduction = process.env.NODE_ENV === "production";
+
   const cookieBase = {
     httpOnly: true,
-    secure: true,
-    sameSite:"lax",
+    secure: isProduction,
+    sameSite: isProduction ? "none" : "strict",
   };
 
   res.cookie("accessToken", accessToken, {

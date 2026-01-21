@@ -7,8 +7,8 @@ const verifyToken = promisify(jwt.verify);
 
 const cookieOptions = () => ({
   httpOnly: true,
-  secure: process.env.NODE_ENV === "production",
-  sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+  secure:true,
+  sameSite: 'lax',
   path: "/", // ensures cookies clear across all routes
 });
 

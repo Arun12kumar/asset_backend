@@ -207,17 +207,21 @@ export const logout = async (req, res) => {
       }
     }
 
+    const isProduction = process.env.NODE_ENV === "production";
+    const sameSite = isProduction ? "none" : "strict";
+
     // Clear cookies
     res.clearCookie("accessToken", {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+      secure: isProduction,
+      sameSite: sameSite,
+      path: "/",
     });
-    res.clearCookie("refreshToken", refreshToken, {
+    res.clearCookie("refreshToken", {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      secure: isProduction,
+      sameSite: sameSite,
+      path: "/",
     });
 
     return res.status(200).json({ success: true, message: "Logout successful" });
@@ -263,6 +267,7 @@ export const refresh = async (req, res) => {
         secure: process.env.NODE_ENV === "production",
         sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
         maxAge: 5 * 60 * 1000, // 5 minutes
+        path: "/",
       });
 
       return res.json({ success: true, accessToken: newAccessToken });
