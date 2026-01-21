@@ -18,10 +18,15 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 4000;
 
+app.set("trust proxy", 1); // Trust the first proxy (Render load balancer)
+
 app.use(cors({
   origin: [
     "http://localhost:3000",
-  ].filter(Boolean), // Filter out undefined/null values
+    "https://assetlistapp.netlify.app",
+    process.env.CLIENT_URL,
+    process.env.LOCAL_CLIENT_URL
+  ].filter(Boolean),
   credentials: true,
 }));
 app.use(express.json());

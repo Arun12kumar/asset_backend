@@ -50,6 +50,7 @@ export const createSessionAndSetCookies = async (
     httpOnly: true,
     secure: isProduction,
     sameSite: isProduction ? "none" : "strict",
+    path: "/",
   };
 
   res.cookie("accessToken", accessToken, {
